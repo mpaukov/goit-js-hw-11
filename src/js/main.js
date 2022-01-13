@@ -1,5 +1,4 @@
 import { Notify } from 'notiflix/build/notiflix-notify-aio';
-import debounce from 'lodash.debounce';
 
 import SimpleLightbox from 'simplelightbox';
 import 'simplelightbox/dist/simple-lightbox.min.css';
@@ -7,31 +6,45 @@ import 'simplelightbox/dist/simple-lightbox.min.css';
 import ServiceAPI from './service-api';
 import markup from './markup';
 
-const DEBOUNCE_DELAY = 300;
-
 const form = document.querySelector('.search-form');
 const searchButton = document.querySelector('[type=submit]');
 const gallery = document.querySelector('.gallery');
+
+const options = {
+  simpleLightBox: {
+    captions: true,
+    captionsData: 'alt',
+    captionDelay: 250,
+  },
+  intersectionObserver: {
+    root: null,
+    threshold: 1,
+  },
+};
+
 const loadService = new ServiceAPI();
 
 form.addEventListener('submit', onFormSubmit);
 
-document.addEventListener('scroll', debounce(loadMore, DEBOUNCE_DELAY));
+const callback = function (entries, observer) {
+  if (entries[0].isIntersecting) {
+    observer.unobserve(entries[0].target);
+    loadPictures();
+  }
+};
+const observer = new IntersectionObserver(callback, options.intersectionObserver);
+
+let galleryLightBox = new SimpleLightbox('.gallery a', options.simpleLightBox);
 
 function onFormSubmit(e) {
   e.preventDefault();
-  searchButton.disabled = true;
+
   const isFilled = e.currentTarget.elements.searchQuery.value;
   if (isFilled) {
+    searchButton.disabled = true;
     loadService.searchQuery = isFilled;
     loadService.resetPage();
     gallery.innerHTML = '';
-    loadPictures();
-  }
-}
-
-function loadMore() {
-  if (gallery.scrollHeight - window.scrollY < 1000) {
     loadPictures();
   }
 }
@@ -70,10 +83,5 @@ function dataProcessing(data) {
       behavior: 'smooth',
     });
   }
+  observer.observe(gallery.lastElementChild);
 }
-
-let galleryLightBox = new SimpleLightbox('.gallery a', {
-  captions: true,
-  captionsData: 'alt',
-  captionDelay: 250,
-});
