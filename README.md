@@ -23,3 +23,7 @@ Working with Rest Api
               <a class="textLink" href="https://simplelightbox.com/" target="_blank" rel="noopener noreferrer nofollow"
                 >SimpleLightbox</a
               >
+
+# stack
+
+JavaScript
